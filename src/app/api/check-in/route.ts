@@ -2,19 +2,33 @@ import { NextResponse } from 'next/server';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
-// IMPORTANT: Create a service account key in Firebase console and place it here
-// Go to Project Settings -> Service accounts -> Generate new private key
-// Then, copy the contents of the JSON file into a new file `serviceAccountKey.json` in the root of your project
-try {
-  const serviceAccount = require('../../../../serviceAccountKey.json');
+// Use environment variables for Firebase Admin SDK credentials
+const serviceAccount = {
+  type: process.env.FIREBASE_TYPE,
+  project_id: process.env.FIREBASE_PROJECT_ID,
+  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+  private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  client_email: process.env.FIREBASE_CLIENT_EMAIL,
+  client_id: process.env.FIREBASE_CLIENT_ID,
+  auth_uri: process.env.FIREBASE_AUTH_URI,
+  token_uri: process.env.FIREBASE_TOKEN_URI,
+  auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
+  client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+};
 
+// Initialize Firebase Admin SDK
+try {
   if (!getApps().length) {
-    initializeApp({
-      credential: cert(serviceAccount)
-    });
+    if (serviceAccount.project_id) {
+      initializeApp({
+        credential: cert(serviceAccount as any)
+      });
+    } else {
+      console.warn("Firebase Admin SDK credentials not found in environment variables. Skipping initialization.");
+    }
   }
 } catch (e) {
-  console.error('serviceAccountKey.json not found. Please create one in the root directory.');
+  console.error('Error initializing Firebase Admin SDK:', e);
 }
 
 
