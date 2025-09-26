@@ -82,7 +82,7 @@ const AttendanceAnalytics: FC<AttendanceAnalyticsProps> = ({ attendanceRecords, 
                 indicator="dot"
               />}
             />
-            <Bar dataKey="present" fill="var(--color-present)" radius={4} />
+            <Bar dataKey="present" fill="var(--color-present)" radius={4} key="present" />
           </BarChart>
         </ChartContainer>
       </CardContent>
