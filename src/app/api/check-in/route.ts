@@ -23,10 +23,21 @@ const db = getFirestore();
 export async function POST(request: Request) {
   const { rfid, apiKey } = await request.json();
 
-  // Simple API key authentication
-  if (apiKey !== process.env.ESP8266_API_KEY) {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  if (!apiKey) {
+    return NextResponse.json({ success: false, message: 'API Key is required' }, { status: 401 });
   }
+
+  // Fetch the stored API key from Firestore
+  try {
+    const apiKeyDoc = await db.collection('settings').doc('apiKey').get();
+    if (!apiKeyDoc.exists || apiKeyDoc.data()?.key !== apiKey) {
+        return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+  } catch (error) {
+    console.error('Error verifying API key:', error);
+    return NextResponse.json({ success: false, message: 'Internal server error during auth' }, { status: 500 });
+  }
+
 
   if (!rfid) {
     return NextResponse.json({ success: false, message: 'RFID is required' }, { status: 400 });
