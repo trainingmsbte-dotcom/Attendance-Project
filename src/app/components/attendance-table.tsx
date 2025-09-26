@@ -42,22 +42,15 @@ const AttendanceTable: FC<AttendanceTableProps> = ({
 }) => {
   const [filter, setFilter] = useState<"all" | "present" | "absent">("all");
 
-  const todayRecords = useMemo(() => {
-    const todayStr = new Date().toISOString().split("T")[0];
-    return attendanceRecords.filter((record) =>
-      record.date.startsWith(todayStr)
-    );
-  }, [attendanceRecords]);
-
   const displayData: DisplayRecord[] = useMemo(() => {
     const presentStudentIds = new Set(
-      todayRecords.map((r) => r.studentId)
+      attendanceRecords.map((r) => r.studentId)
     );
 
     let allStudentsWithStatus = students.map((student) => {
       const isPresent = presentStudentIds.has(student.id);
       const record = isPresent
-        ? todayRecords.find((r) => r.studentId === student.id)
+        ? attendanceRecords.find((r) => r.studentId === student.id)
         : null;
       return {
         id: student.id,
@@ -73,8 +66,12 @@ const AttendanceTable: FC<AttendanceTableProps> = ({
     if (filter === "absent") {
       return allStudentsWithStatus.filter((s) => s.status === "Absent");
     }
-    return allStudentsWithStatus;
-  }, [students, todayRecords, filter]);
+    return allStudentsWithStatus.sort((a, b) => {
+      if (a.status === 'Present' && b.status === 'Absent') return -1;
+      if (a.status === 'Absent' && b.status === 'Present') return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [students, attendanceRecords, filter]);
 
   return (
     <Card className="shadow-lg h-full">
