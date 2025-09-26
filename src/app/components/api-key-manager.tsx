@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { KeyRound, Copy, Check, Loader2 } from "lucide-react";
+import { Key, Copy, Check, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -100,7 +100,7 @@ const ApiKeyManager: FC = () => {
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 font-headline">
-          <KeyRound className="h-6 w-6" />
+          <Key className="h-6 w-6" />
           API Key Manager
         </CardTitle>
         <CardDescription>
