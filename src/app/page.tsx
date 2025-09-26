@@ -1,44 +1,72 @@
 "use client";
 
 import type { FC } from "react";
-import React, { useState, useEffect, useCallback } from "react";
-import { collection, onSnapshot, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import type { Student, AttendanceRecord } from "@/app/lib/data";
-import { useToast } from "@/hooks/use-toast";
+import React,
+{
+  useState,
+  useEffect,
+  useCallback
+} from "react";
+import {
+  collection,
+  onSnapshot,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  serverTimestamp
+} from "firebase/firestore";
+import {
+  db
+} from "@/lib/firebase";
+import type {
+  Student,
+  AttendanceRecord
+} from "@/app/lib/data";
+import {
+  useToast
+} from "@/hooks/use-toast";
 import Header from "@/app/components/header";
 import RfidScanner from "@/app/components/rfid-scanner";
 import AttendanceTable from "@/app/components/attendance-table";
 import AttendanceAnalytics from "@/app/components/attendance-analytics";
-import { initialStudents } from "@/app/lib/data";
+import {
+  initialStudents
+} from "@/app/lib/data";
+import ApiKeyManager from "@/app/components/api-key-manager";
 
 
 const Home: FC = () => {
-  const [students, setStudents] = useState<Student[]>(initialStudents);
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-  const { toast } = useToast();
+  const [students, setStudents] = useState < Student[] > (initialStudents);
+  const [attendanceRecords, setAttendanceRecords] = useState < AttendanceRecord[] > ([]);
+  const {
+    toast
+  } = useToast();
 
   useEffect(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const q = query(collection(db, "attendance"), where("checkInTime", ">=", today));
-    
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        const records = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            ...data,
-            checkInTime: data.checkInTime.toDate(),
-            date: data.checkInTime.toDate().toISOString(),
-          } as AttendanceRecord
-        });
-        setAttendanceRecords(records);
+      const records = snapshot.docs.map(doc => {
+        const data = doc.data();
+        // Ensure checkInTime is converted from Firestore Timestamp to Date
+        const checkInTime = data.checkInTime ? .toDate ? data.checkInTime.toDate() : new Date(data.checkInTime);
+        return {
+          ...data,
+          studentId: data.studentId,
+          checkInTime: checkInTime,
+          date: checkInTime.toISOString(),
+        } as AttendanceRecord
+      });
+      setAttendanceRecords(records);
     });
 
     return () => unsubscribe();
   }, []);
-  
+
   const handleCheckIn = useCallback(async (rfid: string) => {
     try {
       const studentsQuery = query(collection(db, "students"), where("rfid", "==", rfid));
@@ -54,8 +82,11 @@ const Home: FC = () => {
       }
 
       const studentDoc = studentSnapshot.docs[0];
-      const student = { id: studentDoc.id, ...studentDoc.data() } as Student;
-      
+      const student = {
+        id: studentDoc.id,
+        ...studentDoc.data()
+      } as Student;
+
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       const todayEnd = new Date();
@@ -77,7 +108,7 @@ const Home: FC = () => {
         });
         return;
       }
-      
+
       await addDoc(collection(db, "attendance"), {
         studentId: student.id,
         checkInTime: serverTimestamp(),
@@ -106,6 +137,7 @@ const Home: FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1 flex flex-col gap-8">
               <RfidScanner onCheckIn={handleCheckIn} />
+              <ApiKeyManager />
               <AttendanceAnalytics attendanceRecords={attendanceRecords} students={students} />
             </div>
             <div className="lg:col-span-2">
