@@ -27,6 +27,12 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!db) {
+      setError("Firestore database is not available.");
+      setLoading(false);
+      return;
+    }
+
     // Create a query to get documents from the 'rfid' collection, ordered by timestamp
     const q = query(collection(db, 'rfid'), orderBy('timestamp', 'desc'));
 
@@ -34,18 +40,18 @@ export default function HomePage() {
     const unsubscribe = onSnapshot(
       q,
       (querySnapshot) => {
-        const data: RfidData[] = [];
-        querySnapshot.forEach((doc) => {
+        const data: RfidData[] = querySnapshot.docs.map((doc) => {
           const docData = doc.data();
           // Convert Firestore Timestamp to JavaScript Date object
           const timestamp = docData.timestamp instanceof Timestamp ? docData.timestamp.toDate() : null;
           
-          data.push({
+          return {
             id: doc.id,
             uid: docData.uid || 'N/A',
             timestamp: timestamp,
-          });
+          };
         });
+        
         setRfidData(data);
         setLoading(false);
         setError(null); // Clear any previous errors on successful fetch
@@ -75,24 +81,26 @@ export default function HomePage() {
               <p className="text-center text-muted-foreground">No RFID data found in the collection.</p>
             )}
             {!loading && !error && rfidData.length > 0 && (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>UID</TableHead>
-                    <TableHead>Timestamp</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rfidData.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-mono">{item.uid}</TableCell>
-                      <TableCell>
-                        {item.timestamp ? item.timestamp.toLocaleString() : 'Invalid Date'}
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>UID</TableHead>
+                      <TableHead>Timestamp</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {rfidData.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-mono">{item.uid}</TableCell>
+                        <TableCell>
+                          {item.timestamp ? item.timestamp.toLocaleString() : 'Invalid Date'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
