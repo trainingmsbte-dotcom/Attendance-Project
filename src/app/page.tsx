@@ -88,21 +88,33 @@ const Home: FC = () => {
 
     const q = query(
       collection(db, "rfid"), 
-      where("checkInTime", ">=", today),
-      orderBy("checkInTime", "desc")
+      where("timestamp", ">=", today),
+      orderBy("timestamp", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const records = snapshot.docs.map(doc => {
-        const data = doc.data();
-        const checkInTime = data.checkInTime?.toDate ? data.checkInTime.toDate() : new Date(data.checkInTime);
-        return {
-          studentId: data.studentId,
-          checkInTime: checkInTime,
-          date: checkInTime.toISOString(),
-        } as AttendanceRecord
+      const recordsPromises = snapshot.docs.map(async (docSnapshot) => {
+        const data = docSnapshot.data();
+        const checkInTime = data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
+        
+        const studentQuery = query(collection(db, "students"), where("rfid", "==", data.uid));
+        const studentSnapshot = await getDocs(studentQuery);
+        
+        if (!studentSnapshot.empty) {
+            const studentDoc = studentSnapshot.docs[0];
+            return {
+              studentId: studentDoc.id,
+              checkInTime: checkInTime,
+              date: checkInTime.toISOString(),
+            } as AttendanceRecord
+        }
+        return null;
       });
-      setAttendanceRecords(records);
+
+      Promise.all(recordsPromises).then(records => {
+        setAttendanceRecords(records.filter(Boolean) as AttendanceRecord[]);
+      })
+
     }, (error) => {
       console.error("Error fetching attendance:", error)
     });
@@ -134,12 +146,12 @@ const Home: FC = () => {
       todayStart.setHours(0, 0, 0, 0);
       const todayEnd = new Date();
       todayEnd.setHours(23, 59, 59, 999);
-
+      
       const attendanceQuery = query(
         collection(db, "rfid"),
-        where("studentId", "==", student.id),
-        where("checkInTime", ">=", todayStart),
-        where("checkInTime", "<=", todayEnd)
+        where("uid", "==", rfid),
+        where("timestamp", ">=", todayStart),
+        where("timestamp", "<=", todayEnd)
       );
 
       const attendanceSnapshot = await getDocs(attendanceQuery);
@@ -153,8 +165,8 @@ const Home: FC = () => {
       }
 
       await addDoc(collection(db, "rfid"), {
-        studentId: student.id,
-        checkInTime: serverTimestamp(),
+        uid: rfid,
+        timestamp: serverTimestamp(),
       });
 
       toast({

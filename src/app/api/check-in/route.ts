@@ -73,8 +73,8 @@ export async function POST(request: Request) {
 
     const attendanceRef = db.collection('rfid');
     const attendanceSnapshot = await attendanceRef
-      .where('studentId', '==', student.id)
-      .where('checkInTime', '>=', todayStart)
+      .where('uid', '==', rfid)
+      .where('timestamp', '>=', todayStart)
       .limit(1)
       .get();
 
@@ -83,8 +83,8 @@ export async function POST(request: Request) {
     }
 
     await attendanceRef.add({
-      studentId: student.id,
-      checkInTime: new Date(),
+      uid: rfid,
+      timestamp: new Date(),
     });
 
     return NextResponse.json({ success: true, message: `Checked in ${student.name}` });
