@@ -28,7 +28,6 @@ interface Student {
 interface RfidLog {
   id: string;
   uid: string;
-  timestamp: Timestamp;
 }
 
 export default function HomePage() {
@@ -66,7 +65,7 @@ export default function HomePage() {
       setLoadingRfid(false);
       return;
     }
-    const q = query(collection(db, "rfid"), orderBy("timestamp", "desc"));
+    const q = query(collection(db, "rfid"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const rfidData: RfidLog[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -85,12 +84,6 @@ export default function HomePage() {
     const student = students.find((s) => s.uid === uid);
     return student ? student.name : "Unknown Student";
   };
-
-  const formatTimestamp = (timestamp: Timestamp | null) => {
-    if (!timestamp) return "N/A";
-    return timestamp.toDate().toLocaleString();
-  };
-
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12">
@@ -159,7 +152,6 @@ export default function HomePage() {
                     <TableRow>
                       <TableHead>Student Name</TableHead>
                       <TableHead>RFID UID</TableHead>
-                      <TableHead>Timestamp</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -168,12 +160,11 @@ export default function HomePage() {
                         <TableRow key={log.id}>
                           <TableCell>{getStudentName(log.uid)}</TableCell>
                           <TableCell>{log.uid}</TableCell>
-                          <TableCell>{formatTimestamp(log.timestamp)}</TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={3} className="h-24 text-center">
+                        <TableCell colSpan={2} className="h-24 text-center">
                           No RFID transactions found.
                         </TableCell>
                       </TableRow>
