@@ -1,8 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import React,
-{
+import React, {
   useState,
   useEffect,
   useCallback
@@ -14,7 +13,9 @@ import {
   where,
   getDocs,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  doc,
+  setDoc
 } from "firebase/firestore";
 import {
   db
@@ -30,19 +31,52 @@ import Header from "@/app/components/header";
 import RfidScanner from "@/app/components/rfid-scanner";
 import AttendanceTable from "@/app/components/attendance-table";
 import AttendanceAnalytics from "@/app/components/attendance-analytics";
-import {
-  initialStudents
-} from "@/app/lib/data";
 import ApiKeyManager from "@/app/components/api-key-manager";
+import { initialStudents } from "@/app/lib/data";
+import Stats from "@/app/components/stats";
 
 
 const Home: FC = () => {
-  const [students, setStudents] = useState < Student[] > (initialStudents);
+  const [students, setStudents] = useState < Student[] > ([]);
   const [attendanceRecords, setAttendanceRecords] = useState < AttendanceRecord[] > ([]);
   const {
     toast
   } = useToast();
 
+  // Seed initial student data if students collection is empty
+  useEffect(() => {
+    const studentsRef = collection(db, "students");
+    const seedData = async () => {
+      const snapshot = await getDocs(studentsRef);
+      if (snapshot.empty) {
+        console.log("No students found, seeding initial data...");
+        const seedPromises = initialStudents.map(student => {
+          const studentDocRef = doc(studentsRef, student.id);
+          return setDoc(studentDocRef, { name: student.name, rfid: student.rfid });
+        });
+        await Promise.all(seedPromises);
+        console.log("Initial student data seeded.");
+      } else {
+        console.log("Students collection already has data.");
+      }
+    };
+    seedData().catch(console.error);
+  }, []);
+  
+  // Listener for student data
+  useEffect(() => {
+    const q = query(collection(db, "students"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const studentList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Student));
+      setStudents(studentList);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Listener for today's attendance records
   useEffect(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -52,10 +86,8 @@ const Home: FC = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const records = snapshot.docs.map(doc => {
         const data = doc.data();
-        // Ensure checkInTime is converted from Firestore Timestamp to Date
         const checkInTime = data.checkInTime?.toDate ? data.checkInTime.toDate() : new Date(data.checkInTime);
         return {
-          ...data,
           studentId: data.studentId,
           checkInTime: checkInTime,
           date: checkInTime.toISOString(),
@@ -130,18 +162,25 @@ const Home: FC = () => {
 
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
       <main className="flex-grow p-4 sm:p-6 md:p-8">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1 flex flex-col gap-8">
-              <RfidScanner onCheckIn={handleCheckIn} />
-              <ApiKeyManager />
+        <div className="container mx-auto space-y-8">
+          <Stats students={students} attendanceRecords={attendanceRecords} />
+          
+          <div className="grid grid-cols-1 gap-8">
+            <AttendanceTable students={students} attendanceRecords={attendanceRecords} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-8">
+            <div className="lg:col-span-1">
               <AttendanceAnalytics attendanceRecords={attendanceRecords} students={students} />
             </div>
-            <div className="lg:col-span-2">
-              <AttendanceTable students={students} attendanceRecords={attendanceRecords} />
+            <div className="lg:col-span-1">
+              <RfidScanner onCheckIn={handleCheckIn} />
+            </div>
+            <div className="lg:col-span-1">
+              <ApiKeyManager />
             </div>
           </div>
         </div>

@@ -49,7 +49,6 @@ const ApiKeyManager: FC = () => {
 
   const generateAndSaveApiKey = async () => {
     setIsGenerating(true);
-    // Generate a secure random 32-character hex string
     const randomBytes = new Uint8Array(16);
     window.crypto.getRandomValues(randomBytes);
     const key = Array.from(randomBytes)
@@ -97,17 +96,23 @@ const ApiKeyManager: FC = () => {
   };
 
   return (
-    <Card className="shadow-lg">
+    <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 font-headline">
-          <Key className="h-6 w-6" />
-          API Key Manager
-        </CardTitle>
-        <CardDescription>
-          Generate and save a secure API key for your ESP8266 device.
-        </CardDescription>
+        <div className="flex items-center gap-4">
+          <div className="bg-primary/10 p-3 rounded-lg">
+            <Key className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <CardTitle>
+              API Key Manager
+            </CardTitle>
+            <CardDescription>
+              Manage the API key for your hardware.
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex-grow space-y-4">
         <div className="flex items-center space-x-2">
             <Input
               id="apikey"
@@ -127,7 +132,7 @@ const ApiKeyManager: FC = () => {
             </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-            Copy this key and program it into your ESP8266 device code. The key is saved automatically.
+            Use this key in your ESP8266 device code to authenticate with the API.
         </p>
       </CardContent>
       <CardFooter>

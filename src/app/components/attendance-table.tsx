@@ -74,12 +74,12 @@ const AttendanceTable: FC<AttendanceTableProps> = ({
   }, [students, attendanceRecords, filter]);
 
   return (
-    <Card className="shadow-lg h-full">
+    <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <CardTitle className="font-headline">Today's Attendance</CardTitle>
-                <CardDescription>{format(new Date(), "MMMM d, yyyy")}</CardDescription>
+                <CardTitle>Today's Attendance</CardTitle>
+                <CardDescription>A real-time log of student check-ins for {format(new Date(), "MMMM d, yyyy")}.</CardDescription>
             </div>
           <Tabs value={filter} onValueChange={(value) => setFilter(value as any)}>
             <TabsList>
@@ -108,10 +108,11 @@ const AttendanceTable: FC<AttendanceTableProps> = ({
                     <TableCell>{record.checkInTime ?? "N/A"}</TableCell>
                     <TableCell className="text-right">
                       <Badge
+                        variant={record.status === "Present" ? "default" : "secondary"}
                         className={
                           record.status === "Present"
-                            ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-800"
-                            : "bg-red-100 text-red-800 border-red-200 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800"
+                            ? "bg-green-500/10 text-green-400 border-green-500/20"
+                            : "bg-red-500/10 text-red-400 border-red-500/20"
                         }
                       >
                         {record.status}
