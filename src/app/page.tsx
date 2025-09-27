@@ -31,6 +31,7 @@ import Header from "@/app/components/header";
 import { initialStudents } from "@/app/lib/data";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Receipt, School } from "lucide-react";
+import RecentCheckinsTable from "@/app/components/recent-checkins-table";
 
 
 const Home: FC = () => {
@@ -194,6 +195,7 @@ const Home: FC = () => {
         <Header />
         <main className="flex-grow p-4 sm:p-6 md:p-8">
           <div className="container mx-auto space-y-8">
+            <RecentCheckinsTable students={students} attendanceRecords={attendanceRecords} />
           </div>
         </main>
       </SidebarInset>
