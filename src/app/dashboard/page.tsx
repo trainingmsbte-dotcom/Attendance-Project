@@ -30,10 +30,8 @@ import {
   useToast
 } from "@/hooks/use-toast";
 import Header from "@/app/components/header";
-import { initialStudents } from "@/app/lib/data";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Receipt, School, LayoutDashboard } from "lucide-react";
-import RecentCheckinsTable from "@/app/components/recent-checkins-table";
 import Stats from "@/app/components/stats";
 import AttendanceTable from "@/app/components/attendance-table";
 import RfidScanner from "@/app/components/rfid-scanner";
@@ -51,21 +49,11 @@ const Dashboard: FC = () => {
 
   // Seed initial student data if students collection is empty
   useEffect(() => {
-    const studentsRef = collection(db, "students");
     const seedData = async () => {
       try {
-        const snapshot = await getDocs(studentsRef);
-        if (snapshot.empty) {
-          console.log("No students found, seeding initial data...");
-          const seedPromises = initialStudents.map(student => {
-            const studentDocRef = doc(studentsRef, student.id); // Use student.id as the document ID
-            return setDoc(studentDocRef, { name: student.name, rfid: student.rfid });
-          });
-          await Promise.all(seedPromises);
-          console.log("Initial student data seeded.");
-        } else {
-          console.log("Students collection already has data.");
-        }
+        const response = await fetch('/api/seed', { method: 'POST' });
+        const data = await response.json();
+        console.log(data.message);
       } catch (error) {
         console.error("Error seeding data:", error)
       }
