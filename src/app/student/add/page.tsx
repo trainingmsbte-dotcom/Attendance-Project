@@ -20,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { db } from "@/lib/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
@@ -52,6 +52,9 @@ export default function AddStudentPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      if (!db) {
+        throw new Error("Firestore database is not available.");
+      }
       await addDoc(collection(db, "students"), {
         name: values.name,
         uid: values.uid,
