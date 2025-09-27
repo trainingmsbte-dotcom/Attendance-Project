@@ -25,6 +25,7 @@ import { db } from "@/lib/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -40,6 +41,7 @@ const formSchema = z.object({
 
 export default function AddStudentPage() {
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,6 +69,7 @@ export default function AddStudentPage() {
         description: "The new student has been saved.",
       });
       form.reset();
+      router.push("/");
     } catch (error) {
       console.error("Error adding document: ", error);
       toast({
