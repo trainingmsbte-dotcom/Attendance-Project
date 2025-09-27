@@ -28,6 +28,7 @@ interface Student {
 interface RfidLog {
   id: string;
   uid: string;
+  timestamp: Timestamp;
 }
 
 export default function HomePage() {
@@ -65,7 +66,7 @@ export default function HomePage() {
       setLoadingRfid(false);
       return;
     }
-    const q = query(collection(db, "rfid"));
+    const q = query(collection(db, "rfid"), orderBy("timestamp", "desc"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const rfidData: RfidLog[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -83,6 +84,11 @@ export default function HomePage() {
   const getStudentName = (uid: string) => {
     const student = students.find((s) => s.uid === uid);
     return student ? student.name : "Unknown Student";
+  };
+
+  const formatTimestamp = (timestamp: Timestamp | null) => {
+    if (!timestamp) return "N/A";
+    return timestamp.toDate().toLocaleString();
   };
 
 
@@ -153,6 +159,7 @@ export default function HomePage() {
                     <TableRow>
                       <TableHead>Student Name</TableHead>
                       <TableHead>RFID UID</TableHead>
+                      <TableHead>Timestamp</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -161,11 +168,12 @@ export default function HomePage() {
                         <TableRow key={log.id}>
                           <TableCell>{getStudentName(log.uid)}</TableCell>
                           <TableCell>{log.uid}</TableCell>
+                          <TableCell>{formatTimestamp(log.timestamp)}</TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={2} className="h-24 text-center">
+                        <TableCell colSpan={3} className="h-24 text-center">
                           No RFID transactions found.
                         </TableCell>
                       </TableRow>
