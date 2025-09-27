@@ -81,6 +81,11 @@ export default function HomePage() {
     return () => unsubscribe();
   }, []);
 
+  const getStudentName = (uid: string) => {
+    const student = students.find((s) => s.uid === uid);
+    return student ? student.name : "Unknown Student";
+  };
+
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12">
@@ -147,6 +152,7 @@ export default function HomePage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Student Name</TableHead>
                       <TableHead>RFID UID</TableHead>
                       <TableHead>Timestamp</TableHead>
                     </TableRow>
@@ -155,6 +161,7 @@ export default function HomePage() {
                     {rfidLogs.length > 0 ? (
                       rfidLogs.map((log) => (
                         <TableRow key={log.id}>
+                          <TableCell>{getStudentName(log.uid)}</TableCell>
                           <TableCell>{log.uid}</TableCell>
                           <TableCell>
                             {log.timestamp ? new Date(log.timestamp.seconds * 1000).toLocaleString() : 'No timestamp'}
@@ -163,7 +170,7 @@ export default function HomePage() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={2} className="h-24 text-center">
+                        <TableCell colSpan={3} className="h-24 text-center">
                           No RFID transactions found.
                         </TableCell>
                       </TableRow>
