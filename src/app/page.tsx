@@ -28,12 +28,9 @@ import {
   useToast
 } from "@/hooks/use-toast";
 import Header from "@/app/components/header";
-import RfidScanner from "@/app/components/rfid-scanner";
-import AttendanceTable from "@/app/components/attendance-table";
-import AttendanceAnalytics from "@/app/components/attendance-analytics";
-import ApiKeyManager from "@/app/components/api-key-manager";
 import { initialStudents } from "@/app/lib/data";
-import Stats from "@/app/components/stats";
+import { Sidebar, SidebarContent, SidebarInset, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
+import { Receipt } from "lucide-react";
 
 
 const Home: FC = () => {
@@ -47,17 +44,21 @@ const Home: FC = () => {
   useEffect(() => {
     const studentsRef = collection(db, "students");
     const seedData = async () => {
-      const snapshot = await getDocs(studentsRef);
-      if (snapshot.empty) {
-        console.log("No students found, seeding initial data...");
-        const seedPromises = initialStudents.map(student => {
-          const studentDocRef = doc(studentsRef, student.id);
-          return setDoc(studentDocRef, { name: student.name, rfid: student.rfid });
-        });
-        await Promise.all(seedPromises);
-        console.log("Initial student data seeded.");
-      } else {
-        console.log("Students collection already has data.");
+      try {
+        const snapshot = await getDocs(studentsRef);
+        if (snapshot.empty) {
+          console.log("No students found, seeding initial data...");
+          const seedPromises = initialStudents.map(student => {
+            const studentDocRef = doc(studentsRef, student.id);
+            return setDoc(studentDocRef, { name: student.name, rfid: student.rfid });
+          });
+          await Promise.all(seedPromises);
+          console.log("Initial student data seeded.");
+        } else {
+          console.log("Students collection already has data.");
+        }
+      } catch (error) {
+        console.error("Error seeding data:", error)
       }
     };
     seedData().catch(console.error);
@@ -72,6 +73,8 @@ const Home: FC = () => {
         ...doc.data()
       } as Student));
       setStudents(studentList);
+    }, (error) => {
+      console.error("Error fetching students:", error)
     });
     return () => unsubscribe();
   }, []);
@@ -94,6 +97,8 @@ const Home: FC = () => {
         } as AttendanceRecord
       });
       setAttendanceRecords(records);
+    }, (error) => {
+      console.error("Error fetching attendance:", error)
     });
 
     return () => unsubscribe();
@@ -163,11 +168,25 @@ const Home: FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <Header />
-      <main className="flex-grow p-4 sm:p-6 md:p-8">
-        <div className="container mx-auto space-y-8">
-        </div>
-      </main>
+      <Sidebar>
+        <SidebarContent>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton href="#" isActive>
+                        <Receipt />
+                        Recent Transactions
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarContent>
+      </Sidebar>
+      <SidebarInset>
+        <Header />
+        <main className="flex-grow p-4 sm:p-6 md:p-8">
+          <div className="container mx-auto space-y-8">
+          </div>
+        </main>
+      </SidebarInset>
     </div>
   );
 };
