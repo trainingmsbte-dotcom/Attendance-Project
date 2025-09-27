@@ -37,7 +37,8 @@ const RecentCheckinsTable: FC<RecentCheckinsTableProps> = ({
     return student ? student.name : "Unknown Student";
   }
 
-  const sortedRecords = [...attendanceRecords].sort((a, b) => new Date(b.checkInTime).getTime() - new Date(a.checkInTime).getTime());
+  // The records are now pre-sorted by the Firestore query
+  const sortedRecords = attendanceRecords;
 
   return (
     <Card>

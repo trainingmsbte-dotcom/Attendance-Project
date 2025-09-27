@@ -15,7 +15,8 @@ import {
   addDoc,
   serverTimestamp,
   doc,
-  setDoc
+  setDoc,
+  orderBy
 } from "firebase/firestore";
 import {
   db
@@ -80,12 +81,16 @@ const Home: FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Listener for today's attendance records
+  // Listener for today's attendance records from 'rfid' collection
   useEffect(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const q = query(collection(db, "attendance"), where("checkInTime", ">=", today));
+    const q = query(
+      collection(db, "rfid"), 
+      where("checkInTime", ">=", today),
+      orderBy("checkInTime", "desc")
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const records = snapshot.docs.map(doc => {
@@ -131,7 +136,7 @@ const Home: FC = () => {
       todayEnd.setHours(23, 59, 59, 999);
 
       const attendanceQuery = query(
-        collection(db, "attendance"),
+        collection(db, "rfid"),
         where("studentId", "==", student.id),
         where("checkInTime", ">=", todayStart),
         where("checkInTime", "<=", todayEnd)
@@ -147,7 +152,7 @@ const Home: FC = () => {
         return;
       }
 
-      await addDoc(collection(db, "attendance"), {
+      await addDoc(collection(db, "rfid"), {
         studentId: student.id,
         checkInTime: serverTimestamp(),
       });

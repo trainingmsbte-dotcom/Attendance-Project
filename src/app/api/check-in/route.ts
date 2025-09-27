@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    const attendanceRef = db.collection('attendance');
+    const attendanceRef = db.collection('rfid');
     const attendanceSnapshot = await attendanceRef
       .where('studentId', '==', student.id)
       .where('checkInTime', '>=', todayStart)
