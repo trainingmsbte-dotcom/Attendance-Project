@@ -166,23 +166,6 @@ const Home: FC = () => {
       <Header />
       <main className="flex-grow p-4 sm:p-6 md:p-8">
         <div className="container mx-auto space-y-8">
-          <Stats students={students} attendanceRecords={attendanceRecords} />
-          
-          <div className="grid grid-cols-1 gap-8">
-            <AttendanceTable students={students} attendanceRecords={attendanceRecords} />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-8">
-            <div className="lg:col-span-1">
-              <AttendanceAnalytics attendanceRecords={attendanceRecords} students={students} />
-            </div>
-            <div className="lg:col-span-1">
-              <RfidScanner onCheckIn={handleCheckIn} />
-            </div>
-            <div className="lg:col-span-1">
-              <ApiKeyManager />
-            </div>
-          </div>
         </div>
       </main>
     </div>
