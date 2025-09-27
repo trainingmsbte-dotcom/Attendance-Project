@@ -110,6 +110,14 @@ export default function HomePage() {
   }, []);
 
   async function onSubmit(values: z.infer<typeof studentFormSchema>) {
+    if (!db) {
+      toast({
+        title: 'Error',
+        description: 'Firestore is not connected.',
+        variant: 'destructive',
+      });
+      return;
+    }
     try {
       await addDoc(collection(db, 'students'), {
         name: values.name,
