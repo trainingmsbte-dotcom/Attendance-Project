@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { CheckSquare } from "lucide-react";
+import { School } from "lucide-react";
 
 const Header: FC = () => {
   return (
@@ -8,10 +8,10 @@ const Header: FC = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
             <div className="bg-primary/10 p-2 rounded-lg">
-                <CheckSquare className="h-6 w-6 text-primary" />
+                <School className="h-6 w-6 text-primary" />
             </div>
             <h1 className="text-xl font-bold text-foreground">
-              AttendEase
+              Smart School System
             </h1>
           </div>
         </div>
