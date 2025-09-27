@@ -29,8 +29,8 @@ import {
 } from "@/hooks/use-toast";
 import Header from "@/app/components/header";
 import { initialStudents } from "@/app/lib/data";
-import { Sidebar, SidebarContent, SidebarInset, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { Receipt } from "lucide-react";
+import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
+import { Receipt, School } from "lucide-react";
 
 
 const Home: FC = () => {
@@ -169,6 +169,16 @@ const Home: FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Sidebar>
+        <SidebarHeader>
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-2 rounded-lg">
+                <School className="h-6 w-6 text-primary" />
+            </div>
+            <h1 className="text-xl font-bold text-foreground">
+              Smart School System
+            </h1>
+          </div>
+        </SidebarHeader>
         <SidebarContent>
             <SidebarMenu>
                 <SidebarMenuItem>
