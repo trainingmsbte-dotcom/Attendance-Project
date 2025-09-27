@@ -24,45 +24,68 @@ interface Student {
   createdAt: Timestamp;
 }
 
+// Define the type for an RFID log document from Firestore
+interface RfidLog {
+  id: string;
+  uid: string;
+  timestamp: Timestamp;
+}
+
 export default function HomePage() {
   const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [rfidLogs, setRfidLogs] = useState<RfidLog[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(true);
+  const [loadingRfid, setLoadingRfid] = useState(true);
 
+  // Effect for fetching students
   useEffect(() => {
-    // Check if db is available to prevent errors during hot-reload
     if (!db) {
       console.error("Firestore database instance is not available.");
-      setLoading(false);
+      setLoadingStudents(false);
       return;
     }
-
-    // Create a query to get students, ordered by creation time
     const q = query(collection(db, "students"), orderBy("createdAt", "desc"));
-
-    // Use onSnapshot for real-time updates
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const studentsData: Student[] = [];
-      querySnapshot.forEach((doc) => {
-        // Important: ensure you have a 'createdAt' field in your documents
-        // for ordering to work correctly.
-        studentsData.push({ id: doc.id, ...doc.data() } as Student);
-      });
+      const studentsData: Student[] = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Student));
       setStudents(studentsData);
-      setLoading(false);
+      setLoadingStudents(false);
     }, (error) => {
-      console.error("Error fetching students in real-time: ", error);
-      // You might want to add a user-facing error message here
-      setLoading(false);
+      console.error("Error fetching students: ", error);
+      setLoadingStudents(false);
     });
-
-    // Cleanup the listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
+  
+  // Effect for fetching RFID logs
+  useEffect(() => {
+    if (!db) {
+      console.error("Firestore database instance is not available.");
+      setLoadingRfid(false);
+      return;
+    }
+    const q = query(collection(db, "rfid"), orderBy("timestamp", "desc"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const rfidData: RfidLog[] = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as RfidLog));
+      setRfidLogs(rfidData);
+      setLoadingRfid(false);
+    }, (error) => {
+      console.error("Error fetching RFID logs: ", error);
+      setLoadingRfid(false);
+    });
     return () => unsubscribe();
   }, []);
 
+
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12">
-      <div className="w-full max-w-5xl">
-        <div className="text-center mb-10">
+      <div className="w-full max-w-5xl space-y-10">
+        <div className="text-center">
           <h1 className="text-4xl font-bold tracking-tight">Student Management System</h1>
           <p className="mt-3 text-lg text-muted-foreground">
             A central place to manage all student records.
@@ -77,7 +100,7 @@ export default function HomePage() {
             <CardTitle>Registered Students</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {loadingStudents ? (
               <div className="text-center text-muted-foreground">Loading student data...</div>
             ) : (
               <div className="border rounded-lg overflow-hidden">
@@ -102,6 +125,46 @@ export default function HomePage() {
                       <TableRow>
                         <TableCell colSpan={3} className="h-24 text-center">
                           No students found. Add a new student to see them here.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>RFID Transactions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingRfid ? (
+              <div className="text-center text-muted-foreground">Loading RFID data...</div>
+            ) : (
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>RFID UID</TableHead>
+                      <TableHead>Timestamp</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rfidLogs.length > 0 ? (
+                      rfidLogs.map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell>{log.uid}</TableCell>
+                          <TableCell>
+                            {log.timestamp ? new Date(log.timestamp.seconds * 1000).toLocaleString() : 'No timestamp'}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={2} className="h-24 text-center">
+                          No RFID transactions found.
                         </TableCell>
                       </TableRow>
                     )}
