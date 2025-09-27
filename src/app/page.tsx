@@ -156,17 +156,17 @@ export default function HomePage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Add New Student</DialogTitle>
-                <DialogDescription>
-                  Enter the student's details and their assigned RFID UID.
-                </DialogDescription>
-              </DialogHeader>
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-8"
                 >
+                  <DialogHeader>
+                    <DialogTitle>Add New Student</DialogTitle>
+                    <DialogDescription>
+                      Enter the student's details and their assigned RFID UID.
+                    </DialogDescription>
+                  </DialogHeader>
                   <FormField
                     control={form.control}
                     name="name"
