@@ -28,7 +28,6 @@ interface Student {
 interface RfidLog {
   id: string;
   uid: string;
-  timestamp: Timestamp;
 }
 
 export default function HomePage() {
@@ -66,7 +65,7 @@ export default function HomePage() {
       setLoadingRfid(false);
       return;
     }
-    const q = query(collection(db, "rfid"), orderBy("timestamp", "desc"));
+    const q = query(collection(db, "rfid"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const rfidData: RfidLog[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -154,7 +153,6 @@ export default function HomePage() {
                     <TableRow>
                       <TableHead>Student Name</TableHead>
                       <TableHead>RFID UID</TableHead>
-                      <TableHead>Timestamp</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -163,14 +161,11 @@ export default function HomePage() {
                         <TableRow key={log.id}>
                           <TableCell>{getStudentName(log.uid)}</TableCell>
                           <TableCell>{log.uid}</TableCell>
-                          <TableCell>
-                            {log.timestamp ? new Date(log.timestamp.seconds * 1000).toLocaleString() : 'No timestamp'}
-                          </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={3} className="h-24 text-center">
+                        <TableCell colSpan={2} className="h-24 text-center">
                           No RFID transactions found.
                         </TableCell>
                       </TableRow>
