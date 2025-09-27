@@ -53,7 +53,7 @@ const Home: FC = () => {
       const records = snapshot.docs.map(doc => {
         const data = doc.data();
         // Ensure checkInTime is converted from Firestore Timestamp to Date
-        const checkInTime = data.checkInTime ? .toDate ? data.checkInTime.toDate() : new Date(data.checkInTime);
+        const checkInTime = data.checkInTime?.toDate ? data.checkInTime.toDate() : new Date(data.checkInTime);
         return {
           ...data,
           studentId: data.studentId,
