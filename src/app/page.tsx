@@ -10,8 +10,9 @@ import {
   Timestamp,
   addDoc,
   serverTimestamp,
+  getFirestore,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { app } from '@/lib/firebase'; // Correctly import the initialized app
 import {
   Table,
   TableHeader,
@@ -35,6 +36,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
+
+// Get the Firestore instance
+const db = getFirestore(app);
 
 // Define the structure of an RFID data entry
 interface RfidData {
@@ -74,7 +78,11 @@ export default function HomePage() {
       return;
     }
 
-    const q = query(collection(db, 'rfid'), orderBy('timestamp', 'desc'));
+    const q = query(
+      collection(db, 'rfid'),
+      orderBy('timestamp', 'desc'),
+      orderBy('uid', 'asc')
+    );
 
     const unsubscribe = onSnapshot(
       q,
@@ -100,7 +108,7 @@ export default function HomePage() {
       (err) => {
         console.error('Error fetching data from Firestore: ', err);
         setError(
-          'Failed to fetch data. This is likely due to Firestore Security Rules. Please check the browser console for the specific error.'
+          'Failed to fetch data. This is likely due to Firestore Security Rules or a missing index. Please check the browser console for the specific error.'
         );
         setLoading(false);
       }
