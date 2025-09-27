@@ -48,10 +48,11 @@ export default function HomePage() {
         });
         setRfidData(data);
         setLoading(false);
+        setError(null); // Clear any previous errors on successful fetch
       },
       (err) => {
-        console.error("Error fetching data: ", err);
-        setError('Failed to fetch data from Firestore. Please check the console for more details.');
+        console.error("Error fetching data from Firestore: ", err);
+        setError('Failed to fetch data. This is likely due to Firestore Security Rules. Please check the browser console for the specific error.');
         setLoading(false);
       }
     );
@@ -68,7 +69,7 @@ export default function HomePage() {
             <CardTitle className="text-2xl font-bold text-center">RFID Scans</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading && <p className="text-center">Loading data...</p>}
+            {loading && <p className="text-center">Loading data from Firestore...</p>}
             {error && <p className="text-center text-red-500">{error}</p>}
             {!loading && !error && rfidData.length === 0 && (
               <p className="text-center text-muted-foreground">No RFID data found in the collection.</p>
