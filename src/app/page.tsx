@@ -30,7 +30,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -194,11 +193,13 @@ export default function HomePage() {
                     )}
                   />
                   <DialogFooter>
-                    <DialogClose asChild>
-                      <Button type="button" variant="secondary">
-                        Cancel
-                      </Button>
-                    </DialogClose>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => setIsFormOpen(false)}
+                    >
+                      Cancel
+                    </Button>
                     <Button type="submit">Save Student</Button>
                   </DialogFooter>
                 </form>
