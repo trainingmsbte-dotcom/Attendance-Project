@@ -4,7 +4,8 @@ import type { FC } from "react";
 import React, {
   useState,
   useEffect,
-  useCallback
+  useCallback,
+  useMemo,
 } from "react";
 import {
   collection,
@@ -37,7 +38,7 @@ import RecentCheckinsTable from "@/app/components/recent-checkins-table";
 
 const Home: FC = () => {
   const [students, setStudents] = useState < Student[] > ([]);
-  const [attendanceRecords, setAttendanceRecords] = useState < AttendanceRecord[] > ([]);
+  const [rawRfidScans, setRawRfidScans] = useState<{ uid: string; timestamp: Date }[]>([]);
   const {
     toast
   } = useToast();
@@ -81,7 +82,7 @@ const Home: FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Listener for today's attendance records from 'rfid' collection
+  // Listener for today's raw RFID scans from 'rfid' collection
   useEffect(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -93,34 +94,45 @@ const Home: FC = () => {
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const recordsPromises = snapshot.docs.map(async (docSnapshot) => {
+      const scans = snapshot.docs.map(docSnapshot => {
         const data = docSnapshot.data();
-        const checkInTime = data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
-        
-        const studentQuery = query(collection(db, "students"), where("rfid", "==", data.uid));
-        const studentSnapshot = await getDocs(studentQuery);
-        
-        if (!studentSnapshot.empty) {
-            const studentDoc = studentSnapshot.docs[0];
-            return {
-              studentId: studentDoc.id,
-              checkInTime: checkInTime,
-              date: checkInTime.toISOString(),
-            } as AttendanceRecord
-        }
-        return null;
+        return {
+          uid: data.uid,
+          timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp),
+        };
       });
-
-      Promise.all(recordsPromises).then(records => {
-        setAttendanceRecords(records.filter(Boolean) as AttendanceRecord[]);
-      })
-
+      setRawRfidScans(scans);
     }, (error) => {
-      console.error("Error fetching attendance:", error)
+      console.error("Error fetching rfid scans:", error)
     });
 
     return () => unsubscribe();
   }, []);
+  
+  // Combine student data and rfid scans into attendance records
+  const attendanceRecords: AttendanceRecord[] = useMemo(() => {
+    if (!students.length || !rawRfidScans.length) {
+      return [];
+    }
+    
+    // Create a map for quick student lookup by RFID
+    const studentMapByRfid = new Map(students.map(s => [s.rfid, s]));
+
+    return rawRfidScans
+      .map(scan => {
+        const student = studentMapByRfid.get(scan.uid);
+        if (student) {
+          return {
+            studentId: student.id,
+            checkInTime: scan.timestamp,
+            date: scan.timestamp.toISOString(),
+          } as AttendanceRecord;
+        }
+        return null;
+      })
+      .filter((record): record is AttendanceRecord => record !== null);
+
+  }, [students, rawRfidScans]);
 
   const handleCheckIn = useCallback(async (rfid: string) => {
     try {
