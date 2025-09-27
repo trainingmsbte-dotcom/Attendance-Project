@@ -51,7 +51,7 @@ const Home: FC = () => {
         if (snapshot.empty) {
           console.log("No students found, seeding initial data...");
           const seedPromises = initialStudents.map(student => {
-            const studentDocRef = doc(studentsRef, student.id);
+            const studentDocRef = doc(studentsRef, student.id); // Use student.id as the document ID
             return setDoc(studentDocRef, { name: student.name, rfid: student.rfid });
           });
           await Promise.all(seedPromises);
