@@ -22,9 +22,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
+      <body className={cn("min-h-screen flex flex-col bg-background font-sans antialiased", inter.variable)}>
         <Navbar />
-        {children}
+        <main className="flex-grow">{children}</main>
+        <footer className="w-full py-4 px-4 sm:px-8 md:px-12 mt-auto">
+          <div className="container mx-auto text-center text-sm text-muted-foreground">
+            Copyright © {new Date().getFullYear()} SmartPresence. Developed by Rohit Kokane.
+          </div>
+        </footer>
         <Toaster />
       </body>
     </html>
