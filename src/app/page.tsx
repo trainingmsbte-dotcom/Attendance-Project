@@ -15,9 +15,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, orderBy, query, doc, deleteDoc, Timestamp } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query, doc, deleteDoc, Timestamp, addDoc, getDocs, writeBatch } from "firebase/firestore";
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Pencil, Trash2, FileDown } from "lucide-react";
+import { Pencil, Trash2, FileDown, Archive } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +37,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 
 // Define the type for a student document from Firestore
@@ -62,6 +64,8 @@ function HomePageContent() {
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [selectedClassForExport, setSelectedClassForExport] = useState<string>("all");
+  const [isBatching, setIsBatching] = useState(false);
+  const [batchName, setBatchName] = useState("");
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -189,6 +193,70 @@ function HomePageContent() {
       : `AttendanceRecord_${selectedClassForExport.replace(/\s+/g, '_')}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
+  
+  const handleCreateBatch = async () => {
+    if (!batchName) {
+      toast({
+        variant: "destructive",
+        title: "Batch Name Required",
+        description: "Please enter a name for the batch.",
+      });
+      return;
+    }
+    if (rfidLogs.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Data",
+        description: "There are no attendance records to batch.",
+      });
+      return;
+    }
+
+    try {
+      // 1. Prepare batch data
+      const batchRecords = rfidLogs.map(log => {
+        const studentInfo = getStudentInfo(log.uid);
+        return {
+          uid: log.uid,
+          name: studentInfo.name,
+          className: studentInfo.className
+        };
+      });
+
+      // 2. Add new batch document to 'attendance_batches'
+      await addDoc(collection(db, "attendance_batches"), {
+        name: batchName,
+        createdAt: new Date(),
+        records: batchRecords,
+      });
+
+      // 3. Delete all documents from 'rfid' collection
+      const rfidCollection = collection(db, "rfid");
+      const rfidSnapshot = await getDocs(rfidCollection);
+      const deleteBatch = writeBatch(db);
+      rfidSnapshot.docs.forEach((doc) => {
+        deleteBatch.delete(doc.ref);
+      });
+      await deleteBatch.commit();
+      
+      toast({
+        title: "Success!",
+        description: `Batch "${batchName}" created and current attendance cleared.`,
+      });
+
+    } catch (error) {
+      console.error("Error creating batch: ", error);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "There was a problem creating the batch. Please try again.",
+      });
+    } finally {
+      setIsBatching(false);
+      setBatchName("");
+    }
+  };
+
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12">
@@ -268,7 +336,11 @@ function HomePageContent() {
                   <div className="text-lg font-medium text-muted-foreground self-center sm:self-auto">
                     {currentTime ? currentTime.toLocaleTimeString() : 'Loading...'}
                   </div>
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap justify-end">
+                     <Button onClick={() => setIsBatching(true)} variant="outline" size="sm" className="w-full sm:w-auto">
+                        <Archive className="mr-2 h-4 w-4" />
+                        Create Batch & Clear
+                      </Button>
                     <Select value={selectedClassForExport} onValueChange={setSelectedClassForExport}>
                         <SelectTrigger className="w-full sm:w-[180px]">
                           <SelectValue placeholder="Select a class" />
@@ -343,6 +415,30 @@ function HomePageContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+       <Dialog open={isBatching} onOpenChange={setIsBatching}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Attendance Batch</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+             <p className="text-sm text-muted-foreground">
+              This will archive all current attendance records into a new batch and clear the current list. This action cannot be undone.
+            </p>
+            <Input
+              placeholder="Enter batch name (e.g., 'Morning Session 2024-07-31')"
+              value={batchName}
+              onChange={(e) => setBatchName(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+                <Button variant="ghost">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleCreateBatch}>Create Batch</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

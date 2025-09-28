@@ -2,13 +2,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { BookUser } from 'lucide-react';
 
 export default function Navbar() {
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const view = searchParams.get('view') || 'students';
+
+  const isBatchesPage = pathname === '/batches';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -23,7 +26,7 @@ export default function Navbar() {
               href="/?view=students"
               className={cn(
                 'transition-colors hover:text-foreground/80',
-                view === 'students' ? 'text-foreground' : 'text-foreground/60'
+                view === 'students' && !isBatchesPage ? 'text-foreground' : 'text-foreground/60'
               )}
             >
               Students Details
@@ -32,10 +35,19 @@ export default function Navbar() {
               href="/?view=attendance"
               className={cn(
                 'transition-colors hover:text-foreground/80',
-                view === 'attendance' ? 'text-foreground' : 'text-foreground/60'
+                view === 'attendance' && !isBatchesPage ? 'text-foreground' : 'text-foreground/60'
               )}
             >
               Attendance Record
+            </Link>
+             <Link
+              href="/batches"
+              className={cn(
+                'transition-colors hover:text-foreground/80',
+                isBatchesPage ? 'text-foreground' : 'text-foreground/60'
+              )}
+            >
+              Batches
             </Link>
           </nav>
         </div>
