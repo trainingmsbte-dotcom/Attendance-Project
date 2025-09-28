@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -15,7 +16,7 @@ export default function Navbar() {
         <div className="mr-4 flex items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <BookUser className="h-6 w-6" />
-            <span className="font-bold">StudentApp</span>
+            <span className="font-bold">SmartPresence</span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link
