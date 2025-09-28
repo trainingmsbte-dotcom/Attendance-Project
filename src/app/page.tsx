@@ -15,8 +15,20 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, orderBy, query, Timestamp } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query, doc, deleteDoc, Timestamp } from "firebase/firestore";
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 // Define the type for a student document from Firestore
 interface Student {
@@ -38,8 +50,10 @@ function HomePageContent() {
   const [rfidLogs, setRfidLogs] = useState<RfidLog[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [loadingRfid, setLoadingRfid] = useState(true);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { toast } = useToast();
   const view = searchParams.get('view') || 'students';
 
   // Effect for fetching students
@@ -91,8 +105,29 @@ function HomePageContent() {
     return student ? student.name : "Unknown Student";
   };
 
-  const handleTabChange = (value: string) => {
-    router.push(`/?view=${value}`);
+  const handleDeleteClick = (student: Student) => {
+    setStudentToDelete(student);
+  };
+
+  const confirmDelete = async () => {
+    if (studentToDelete) {
+      try {
+        await deleteDoc(doc(db, "students", studentToDelete.id));
+        toast({
+          title: "Success!",
+          description: "Student has been deleted.",
+        });
+      } catch (error) {
+        console.error("Error deleting student: ", error);
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description: "There was a problem deleting the student. Please try again.",
+        });
+      } finally {
+        setStudentToDelete(null);
+      }
+    }
   };
 
   return (
@@ -105,7 +140,7 @@ function HomePageContent() {
           </p>
         </div>
 
-        <Tabs value={view} onValueChange={handleTabChange} className="w-full">
+        <Tabs value={view} onValueChange={(value) => router.push(`/?view=${value}`)} className="w-full">
           <TabsContent value="students">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -125,6 +160,7 @@ function HomePageContent() {
                           <TableHead>Student Name</TableHead>
                           <TableHead>RFID UID</TableHead>
                           <TableHead>Class</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -134,11 +170,25 @@ function HomePageContent() {
                               <TableCell className="font-medium">{student.name}</TableCell>
                               <TableCell>{student.uid}</TableCell>
                               <TableCell>{student.className}</TableCell>
+                              <TableCell className="text-right">
+                                <Button asChild variant="ghost" size="icon">
+                                  <Link href={`/student/edit/${student.id}`}>
+                                    <Pencil className="h-4 w-4" />
+                                  </Link>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteClick(student)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
                             </TableRow>
                           ))
                         ) : (
                           <TableRow>
-                            <TableCell colSpan={3} className="h-24 text-center">
+                            <TableCell colSpan={4} className="h-24 text-center">
                               No students found. Add a new student to see them here.
                             </TableCell>
                           </TableRow>
@@ -191,6 +241,21 @@ function HomePageContent() {
           </TabsContent>
         </Tabs>
       </div>
+      <AlertDialog open={!!studentToDelete} onOpenChange={() => setStudentToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the student
+              and remove their data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
