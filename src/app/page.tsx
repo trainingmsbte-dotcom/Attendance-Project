@@ -51,6 +51,7 @@ function HomePageContent() {
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [loadingRfid, setLoadingRfid] = useState(true);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -98,6 +99,13 @@ function HomePageContent() {
       setLoadingRfid(false);
     });
     return () => unsubscribe();
+  }, []);
+
+  // Effect for the real-time clock
+  useEffect(() => {
+    setCurrentTime(new Date());
+    const timerId = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timerId);
   }, []);
 
   const getStudentName = (uid: string) => {
@@ -202,8 +210,11 @@ function HomePageContent() {
           </TabsContent>
           <TabsContent value="attendance">
             <Card id="attendance">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Attendance Record</CardTitle>
+                <div className="text-lg font-medium text-muted-foreground">
+                  {currentTime ? currentTime.toLocaleTimeString() : 'Loading...'}
+                </div>
               </CardHeader>
               <CardContent>
                 {loadingRfid ? (
