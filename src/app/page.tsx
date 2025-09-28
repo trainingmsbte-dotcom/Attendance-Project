@@ -17,7 +17,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, orderBy, query, doc, deleteDoc, Timestamp } from "firebase/firestore";
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, FileDown } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +29,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import * as XLSX from "xlsx";
 
 // Define the type for a student document from Firestore
 interface Student {
@@ -138,6 +139,23 @@ function HomePageContent() {
     }
   };
 
+  const handleExport = () => {
+    const dataToExport = rfidLogs.map(log => {
+      const studentInfo = getStudentInfo(log.uid);
+      return {
+        'RFID UID': log.uid,
+        'Student Name': studentInfo.name,
+        'Class': studentInfo.className
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+
+    XLSX.writeFile(workbook, "AttendanceRecord.xlsx");
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12">
       <div className="w-full max-w-5xl space-y-10">
@@ -212,8 +230,14 @@ function HomePageContent() {
             <Card id="attendance">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Attendance Record</CardTitle>
-                <div className="text-lg font-medium text-muted-foreground">
-                  {currentTime ? currentTime.toLocaleTimeString() : 'Loading...'}
+                <div className="flex items-center gap-4">
+                  <div className="text-lg font-medium text-muted-foreground">
+                    {currentTime ? currentTime.toLocaleTimeString() : 'Loading...'}
+                  </div>
+                  <Button onClick={handleExport} variant="outline" size="sm">
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Export to Excel
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
