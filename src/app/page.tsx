@@ -138,7 +138,7 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="attendance">
           <CardHeader>
             <CardTitle>Attendance Record</CardTitle>
           </CardHeader>
