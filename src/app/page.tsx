@@ -30,6 +30,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 // Define the type for a student document from Firestore
 interface Student {
@@ -53,6 +61,8 @@ function HomePageContent() {
   const [loadingRfid, setLoadingRfid] = useState(true);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
+  const [selectedClassForExport, setSelectedClassForExport] = useState<string>("all");
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -114,6 +124,11 @@ function HomePageContent() {
     return student ? { name: student.name, className: student.className } : { name: "Unknown Student", className: "N/A" };
   };
 
+  const getUniqueClasses = () => {
+    const classNames = students.map(s => s.className);
+    return [...new Set(classNames)];
+  }
+
   const handleDeleteClick = (student: Student) => {
     setStudentToDelete(student);
   };
@@ -140,20 +155,39 @@ function HomePageContent() {
   };
 
   const handleExport = () => {
-    const dataToExport = rfidLogs.map(log => {
-      const studentInfo = getStudentInfo(log.uid);
-      return {
-        'RFID UID': log.uid,
-        'Student Name': studentInfo.name,
-        'Class': studentInfo.className
-      };
-    });
+    const dataToExport = rfidLogs
+      .map(log => {
+        const studentInfo = getStudentInfo(log.uid);
+        return {
+          'RFID UID': log.uid,
+          'Student Name': studentInfo.name,
+          'Class': studentInfo.className
+        };
+      })
+      .filter(record => {
+        if (selectedClassForExport === 'all') {
+          return true;
+        }
+        return record.Class === selectedClassForExport;
+      });
+
+    if (dataToExport.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Data",
+        description: `No attendance records found for ${selectedClassForExport === 'all' ? 'any class' : selectedClassForExport}.`,
+      });
+      return;
+    }
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
 
-    XLSX.writeFile(workbook, "AttendanceRecord.xlsx");
+    const fileName = selectedClassForExport === 'all' 
+      ? "AttendanceRecord_All.xlsx" 
+      : `AttendanceRecord_${selectedClassForExport.replace(/\s+/g, '_')}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   };
 
   return (
@@ -228,16 +262,29 @@ function HomePageContent() {
           </TabsContent>
           <TabsContent value="attendance">
             <Card id="attendance">
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <CardTitle>Attendance Record</CardTitle>
-                <div className="flex items-center gap-4">
-                  <div className="text-lg font-medium text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+                  <div className="text-lg font-medium text-muted-foreground self-center sm:self-auto">
                     {currentTime ? currentTime.toLocaleTimeString() : 'Loading...'}
                   </div>
-                  <Button onClick={handleExport} variant="outline" size="sm">
-                    <FileDown className="mr-2 h-4 w-4" />
-                    Export to Excel
-                  </Button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Select value={selectedClassForExport} onValueChange={setSelectedClassForExport}>
+                        <SelectTrigger className="w-full sm:w-[180px]">
+                          <SelectValue placeholder="Select a class" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Classes</SelectItem>
+                          {getUniqueClasses().map(className => (
+                            <SelectItem key={className} value={className}>{className}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    <Button onClick={handleExport} variant="outline" size="sm" className="w-full sm:w-auto">
+                      <FileDown className="mr-2 h-4 w-4" />
+                      Export to Excel
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
