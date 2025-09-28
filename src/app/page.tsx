@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
@@ -12,8 +13,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, orderBy, query, Timestamp } from "firebase/firestore";
+import { useSearchParams, useRouter } from 'next/navigation';
 
 // Define the type for a student document from Firestore
 interface Student {
@@ -30,11 +33,14 @@ interface RfidLog {
   uid: string;
 }
 
-export default function HomePage() {
+function HomePageContent() {
   const [students, setStudents] = useState<Student[]>([]);
   const [rfidLogs, setRfidLogs] = useState<RfidLog[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [loadingRfid, setLoadingRfid] = useState(true);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const view = searchParams.get('view') || 'students';
 
   // Effect for fetching students
   useEffect(() => {
@@ -85,6 +91,10 @@ export default function HomePage() {
     return student ? student.name : "Unknown Student";
   };
 
+  const handleTabChange = (value: string) => {
+    router.push(`/?view=${value}`);
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12">
       <div className="w-full max-w-5xl space-y-10">
@@ -98,84 +108,97 @@ export default function HomePage() {
           </Button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Registered Students</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loadingStudents ? (
-              <div className="text-center text-muted-foreground">Loading student data...</div>
-            ) : (
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student Name</TableHead>
-                      <TableHead>RFID UID</TableHead>
-                      <TableHead>Class</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {students.length > 0 ? (
-                      students.map((student) => (
-                        <TableRow key={student.id}>
-                          <TableCell className="font-medium">{student.name}</TableCell>
-                          <TableCell>{student.uid}</TableCell>
-                          <TableCell>{student.className}</TableCell>
+        <Tabs value={view} onValueChange={handleTabChange} className="w-full">
+          <TabsContent value="students">
+            <Card>
+              <CardHeader>
+                <CardTitle>Registered Students</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingStudents ? (
+                  <div className="text-center text-muted-foreground">Loading student data...</div>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Student Name</TableHead>
+                          <TableHead>RFID UID</TableHead>
+                          <TableHead>Class</TableHead>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={3} className="h-24 text-center">
-                          No students found. Add a new student to see them here.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card id="attendance">
-          <CardHeader>
-            <CardTitle>Attendance Record</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loadingRfid ? (
-              <div className="text-center text-muted-foreground">Loading RFID data...</div>
-            ) : (
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student Name</TableHead>
-                      <TableHead>RFID UID</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rfidLogs.length > 0 ? (
-                      rfidLogs.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell>{getStudentName(log.uid)}</TableCell>
-                          <TableCell>{log.uid}</TableCell>
+                      </TableHeader>
+                      <TableBody>
+                        {students.length > 0 ? (
+                          students.map((student) => (
+                            <TableRow key={student.id}>
+                              <TableCell className="font-medium">{student.name}</TableCell>
+                              <TableCell>{student.uid}</TableCell>
+                              <TableCell>{student.className}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={3} className="h-24 text-center">
+                              No students found. Add a new student to see them here.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="attendance">
+            <Card id="attendance">
+              <CardHeader>
+                <CardTitle>Attendance Record</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingRfid ? (
+                  <div className="text-center text-muted-foreground">Loading RFID data...</div>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Student Name</TableHead>
+                          <TableHead>RFID UID</TableHead>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={2} className="h-24 text-center">
-                          No RFID transactions found.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                      </TableHeader>
+                      <TableBody>
+                        {rfidLogs.length > 0 ? (
+                          rfidLogs.map((log) => (
+                            <TableRow key={log.id}>
+                              <TableCell>{getStudentName(log.uid)}</TableCell>
+                              <TableCell>{log.uid}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={2} className="h-24 text-center">
+                              No RFID transactions found.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomePageContent />
+    </Suspense>
   );
 }
