@@ -103,16 +103,20 @@ function HomePageContent() {
           <p className="mt-3 text-lg text-muted-foreground">
             A central place to manage all student records.
           </p>
-          <Button asChild className="mt-6">
-            <Link href="/student/add">Add New Student</Link>
-          </Button>
         </div>
 
         <Tabs value={view} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="students">Students Details</TabsTrigger>
+            <TabsTrigger value="attendance">Attendance Record</TabsTrigger>
+          </TabsList>
           <TabsContent value="students">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Registered Students</CardTitle>
+                <Button asChild>
+                  <Link href="/student/add">Add New Student</Link>
+                </Button>
               </CardHeader>
               <CardContent>
                 {loadingStudents ? (
