@@ -140,7 +140,7 @@ export default function HomePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>RFID Transactions</CardTitle>
+            <CardTitle>Attendance Record</CardTitle>
           </CardHeader>
           <CardContent>
             {loadingRfid ? (
