@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, orderBy, query, Timestamp } from "firebase/firestore";
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -106,10 +106,6 @@ function HomePageContent() {
         </div>
 
         <Tabs value={view} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="students">Students Details</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance Record</TabsTrigger>
-          </TabsList>
           <TabsContent value="students">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
