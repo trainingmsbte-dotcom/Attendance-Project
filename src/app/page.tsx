@@ -260,10 +260,10 @@ function HomePageContent() {
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12">
-      <div className="w-full max-w-5xl space-y-10">
+      <div className="w-full max-w-5xl space-y-6">
         <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight">Student Management System</h1>
-          <p className="mt-3 text-lg text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Student Management System</h1>
+          <p className="mt-2 text-md text-muted-foreground sm:text-lg">
             A central place to manage all student records.
           </p>
         </div>
