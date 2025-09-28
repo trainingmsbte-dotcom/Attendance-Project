@@ -108,9 +108,9 @@ function HomePageContent() {
     return () => clearInterval(timerId);
   }, []);
 
-  const getStudentName = (uid: string) => {
+  const getStudentInfo = (uid: string) => {
     const student = students.find((s) => s.uid === uid);
-    return student ? student.name : "Unknown Student";
+    return student ? { name: student.name, className: student.className } : { name: "Unknown Student", className: "N/A" };
   };
 
   const handleDeleteClick = (student: Student) => {
@@ -165,8 +165,8 @@ function HomePageContent() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Student Name</TableHead>
                           <TableHead>RFID UID</TableHead>
+                          <TableHead>Student Name</TableHead>
                           <TableHead>Class</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -175,8 +175,8 @@ function HomePageContent() {
                         {students.length > 0 ? (
                           students.map((student) => (
                             <TableRow key={student.id}>
-                              <TableCell className="font-medium">{student.name}</TableCell>
                               <TableCell>{student.uid}</TableCell>
+                              <TableCell className="font-medium">{student.name}</TableCell>
                               <TableCell>{student.className}</TableCell>
                               <TableCell className="text-right">
                                 <Button asChild variant="ghost" size="icon">
@@ -224,21 +224,26 @@ function HomePageContent() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Student Name</TableHead>
                           <TableHead>RFID UID</TableHead>
+                          <TableHead>Student Name</TableHead>
+                          <TableHead>Class</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {rfidLogs.length > 0 ? (
-                          rfidLogs.map((log) => (
-                            <TableRow key={log.id}>
-                              <TableCell>{getStudentName(log.uid)}</TableCell>
-                              <TableCell>{log.uid}</TableCell>
-                            </TableRow>
-                          ))
+                          rfidLogs.map((log) => {
+                            const studentInfo = getStudentInfo(log.uid);
+                            return (
+                              <TableRow key={log.id}>
+                                <TableCell>{log.uid}</TableCell>
+                                <TableCell>{studentInfo.name}</TableCell>
+                                <TableCell>{studentInfo.className}</TableCell>
+                              </TableRow>
+                            );
+                          })
                         ) : (
                           <TableRow>
-                            <TableCell colSpan={2} className="h-24 text-center">
+                            <TableCell colSpan={3} className="h-24 text-center">
                               No RFID transactions found.
                             </TableCell>
                           </TableRow>
