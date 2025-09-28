@@ -329,6 +329,12 @@ function HomePageContent() {
             </Card>
           </TabsContent>
           <TabsContent value="attendance">
+             <div className="flex justify-end mb-4">
+               <Button onClick={() => setIsBatching(true)} variant="outline">
+                  <Archive className="mr-2 h-4 w-4" />
+                  Create Batch & Clear
+                </Button>
+            </div>
             <Card id="attendance">
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <CardTitle>Attendance Record</CardTitle>
@@ -337,10 +343,6 @@ function HomePageContent() {
                     {currentTime ? currentTime.toLocaleTimeString() : 'Loading...'}
                   </div>
                   <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap justify-end">
-                     <Button onClick={() => setIsBatching(true)} variant="outline" size="sm" className="w-full sm:w-auto">
-                        <Archive className="mr-2 h-4 w-4" />
-                        Create Batch & Clear
-                      </Button>
                     <Select value={selectedClassForExport} onValueChange={setSelectedClassForExport}>
                         <SelectTrigger className="w-full sm:w-[180px]">
                           <SelectValue placeholder="Select a class" />
